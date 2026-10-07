@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GRTIC · Centro de Mando</title>
+<meta name="description" content="Laboratorio 4 — Gerencia de Recursos de Tecnología de Información y Comunicación">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   Tokens — paleta y tipografía inspiradas en apple.com
+   ========================================================= */
+:root{
+  --bg:#ffffff; --bg2:#f5f5f7; --panel:#f5f5f7; --panel-alt:#ffffff;
+  --line:#d2d2d7; --text:#1d1d1f; --muted:#6e6e73;
+  --c1:#0071e3; --c2:#8944ab; --c3:#e3165b; --c4:#1a8a3a; --c5:#c25e00;
+  --shadow:0 2px 14px rgba(0,0,0,.05); --shadow-h:0 24px 60px rgba(0,0,0,.12);
+  --nav:rgba(251,251,253,.78);
+  --radius:28px;
+  --ease:cubic-bezier(.16,1,.3,1); --ease2:cubic-bezier(.28,.11,.32,1);
+  --sans:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Inter","Helvetica Neue",Arial,sans-serif;
+  --mono:"SF Mono","JetBrains Mono",ui-monospace,Menlo,monospace;
+  --apple-grad:linear-gradient(90deg,#0894ff,#c959dd 34%,#ff2e54 68%,#ff9004);
+  color-scheme:light;
+}
+:root[data-theme="dark"], .dark, .concl{
+  --bg:#000000; --bg2:#161617; --panel:#1d1d1f; --panel-alt:#1d1d1f;
+  --line:#424245; --text:#f5f5f7; --muted:#a1a1a6;
+  --c1:#2997ff; --c2:#bf5af2; --c3:#ff375f; --c4:#30d158; --c5:#ff9f0a;
+  --shadow:0 2px 14px rgba(0,0,0,.4); --shadow-h:0 24px 60px rgba(0,0,0,.6);
+  --nav:rgba(22,22,23,.78);
+}
+:root[data-theme="dark"]{color-scheme:dark}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#000000; --bg2:#161617; --panel:#1d1d1f; --panel-alt:#1d1d1f;
+    --line:#424245; --text:#f5f5f7; --muted:#a1a1a6;
+    --c1:#2997ff; --c2:#bf5af2; --c3:#ff375f; --c4:#30d158; --c5:#ff9f0a;
+    --shadow:0 2px 14px rgba(0,0,0,.4); --shadow-h:0 24px 60px rgba(0,0,0,.6);
+    --nav:rgba(22,22,23,.78); color-scheme:dark;
+  }
+}
+
+/* =========================================================
+   Base
+   ========================================================= */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;overflow-x:clip;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:17px;line-height:1.47;letter-spacing:-.022em;overflow-x:clip}
+a{color:var(--c1);text-decoration:none}
+a:hover{text-decoration:underline}
+.mono{font-family:var(--mono)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+section{padding:150px 0;position:relative;background:var(--bg);color:var(--text)}
+section.alt{background:var(--bg2);--panel:var(--panel-alt)}
+h2{font-size:clamp(2.5rem,6vw,4.25rem);line-height:1.06;letter-spacing:-.035em;font-weight:700;margin-bottom:20px}
+h3{font-size:1.3rem;line-height:1.25;letter-spacing:-.02em;font-weight:600;margin-bottom:8px}
+.tag{display:block;font-size:1.05rem;font-weight:600;color:var(--c5);margin-bottom:10px;letter-spacing:-.01em}
+.wrap>.tag,.wrap>h2,.wrap>.lead{text-align:center;margin-left:auto;margin-right:auto}
+.lead{color:var(--muted);max-width:760px;font-size:clamp(1.1rem,2vw,1.4rem);line-height:1.4;font-weight:500}
+.lead b{color:var(--text)}
+.grad{background:var(--apple-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* =========================================================
+   Barra de progreso + navegación (vidrio esmerilado)
+   ========================================================= */
+#progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--c1);z-index:100}
+nav{position:fixed;top:0;left:0;right:0;z-index:90;background:var(--nav);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid color-mix(in srgb,var(--line) 45%,transparent);transition:background .4s}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:48px;gap:16px}
+.logo{white-space:nowrap;font-weight:600;font-size:.95rem;display:flex;align-items:center;gap:8px;color:var(--text)}
+.logo:hover{text-decoration:none}
+.logo .dot{width:8px;height:8px;border-radius:50%;background:var(--c4);animation:pulse 2s infinite}
+nav ul{display:flex;gap:30px;list-style:none}
+nav ul a{color:var(--text);opacity:.8;font-size:.75rem;letter-spacing:-.01em;transition:opacity .3s,color .3s}
+nav ul a:hover{opacity:1;text-decoration:none}
+nav ul a.active{opacity:1;color:var(--c1)}
+.nav-actions{display:flex;gap:4px}
+.icon-btn{background:transparent;border:none;color:var(--text);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1rem;transition:background .3s var(--ease2),transform .3s var(--ease2)}
+.icon-btn:hover{background:color-mix(in srgb,var(--text) 8%,transparent)}
+.icon-btn:active{transform:scale(.9)}
+#menuBtn{display:none}
+@media(max-width:900px){
+  nav ul{position:fixed;top:48px;left:0;right:0;height:calc(100vh - 48px);flex-direction:column;background:var(--bg);padding:26px 40px;gap:2px;opacity:0;visibility:hidden;transform:translateY(-10px);transition:opacity .4s var(--ease),transform .6s var(--ease),visibility .4s}
+  nav ul.open{opacity:1;visibility:visible;transform:none}
+  nav ul a{font-size:1.75rem;font-weight:600;opacity:1;display:block;padding:6px 0}
+  nav ul.open li{animation:rise .7s var(--ease) both}
+  nav ul.open li:nth-child(2){animation-delay:.04s} nav ul.open li:nth-child(3){animation-delay:.08s}
+  nav ul.open li:nth-child(4){animation-delay:.12s} nav ul.open li:nth-child(5){animation-delay:.16s}
+  nav ul.open li:nth-child(6){animation-delay:.2s}
+  #menuBtn{display:block}
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+#hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:130px 0 90px;overflow:hidden;text-align:center;background:var(--bg)}
+#net{position:absolute;inset:0;width:100%;height:100%;filter:blur(50px) saturate(140%);opacity:.28;pointer-events:none}
+.hero-grid{position:relative;display:flex;flex-direction:column;align-items:center;gap:80px;perspective:1400px}
+.hero-grid>div:first-child{will-change:transform,opacity}
+.hero-grid>div:first-child>*{animation:rise 1.3s var(--ease) both}
+.hero-grid>div:first-child>:nth-child(2){animation-delay:.1s}
+.hero-grid>div:first-child>:nth-child(3){animation-delay:.25s}
+.hero-grid>div:first-child>:nth-child(4){animation-delay:.4s}
+.hero-grid>div:first-child>:nth-child(5){animation-delay:.55s}
+.hero-grid>div:first-child>:nth-child(6){animation-delay:.62s}
+.hero h1{font-size:clamp(3rem,9vw,6.5rem);line-height:1.02;letter-spacing:-.045em;font-weight:700}
+.typing{font-size:clamp(1.2rem,2.4vw,1.75rem);font-weight:600;color:var(--muted);min-height:1.5em;margin-top:16px}
+.typing::after{content:"";display:inline-block;width:2px;height:1em;background:var(--c1);margin-left:3px;vertical-align:-.12em;animation:blink 1s steps(1) infinite}
+.hero p.sub{margin:18px auto 34px;color:var(--muted);font-size:clamp(1.05rem,1.8vw,1.3rem);max-width:640px}
+.hero p.sub b{color:var(--text)}
+.terminal{width:min(760px,100%);background:#1c1c1e;border-radius:14px;font-family:var(--mono);font-size:.85rem;text-align:left;box-shadow:0 0 0 .5px rgba(0,0,0,.35),0 40px 100px rgba(0,0,0,.28);overflow:hidden;transform-origin:50% 0;will-change:transform;animation:rise 1.4s .75s var(--ease) both}
+.terminal .bar{display:flex;gap:8px;padding:12px 14px;background:#2c2c2e}
+.terminal .bar i{width:12px;height:12px;border-radius:50%;background:#ff5f57}
+.terminal .bar i:nth-child(2){background:#febc2e}.terminal .bar i:nth-child(3){background:#28c840}
+.terminal pre{padding:24px;color:#d1d1d6;white-space:pre-wrap;min-height:280px;font-family:inherit;line-height:1.7}
+.terminal .ok{color:#30d158}.terminal .k{color:#64d2ff}.terminal .w{color:#ffd60a}
+.scroll-hint{display:none}
+@media(max-width:600px){.terminal{font-size:.68rem}.terminal pre{min-height:220px;padding:16px}.hero-grid{gap:56px}}
+
+/* =========================================================
+   Botones tipo "pill"
+   ========================================================= */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:12px 24px;margin:4px;border-radius:980px;font-size:1.05rem;font-weight:400;border:1px solid var(--c1);color:var(--c1);background:transparent;cursor:pointer;font-family:inherit;letter-spacing:-.01em;transition:background .35s var(--ease2),color .35s var(--ease2),transform .35s var(--ease2)}
+.btn:hover{background:var(--c1);color:#fff;text-decoration:none}
+.btn:active{transform:scale(.96)}
+.btn.primary{background:var(--c1);color:#fff}
+.btn.primary:hover{background:color-mix(in srgb,var(--c1) 85%,#fff)}
+
+/* =========================================================
+   Tarjetas
+   ========================================================= */
+.card{background:var(--panel);border-radius:var(--radius);padding:30px;position:relative;overflow:hidden;
+  transition:transform .7s var(--ease),box-shadow .7s var(--ease),opacity 1.1s var(--ease),translate 1.4s var(--ease),scale 1.4s var(--ease),filter 1.1s var(--ease)}
+.card:hover{transform:scale(1.02);box-shadow:var(--shadow-h)}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:20px}
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:48px}
+
+/* ---------- concepto ---------- */
+.def{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;margin-top:80px}
+.quote{font-size:clamp(1.4rem,2.4vw,1.9rem);line-height:1.25;font-weight:600;letter-spacing:-.025em}
+.quote small{display:block;color:var(--muted);font-size:.95rem;font-weight:500;margin-top:16px;letter-spacing:0}
+.pillars-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pillars-mini div{background:var(--panel);border-radius:22px;padding:22px 12px;text-align:center}
+.pillars-mini b{display:block;font-size:3rem;font-weight:700;letter-spacing:-.04em;line-height:1.1}
+.pillars-mini span{color:var(--muted);font-size:.8rem;display:block;line-height:1.3;margin-top:4px}
+
+/* =========================================================
+   CICLO DE VIDA
+   ========================================================= */
+.cycle{display:grid;grid-template-columns:minmax(0,460px) 1fr;gap:64px;align-items:center;margin-top:80px}
+.orbit{position:relative;width:min(440px,100%);aspect-ratio:1;margin:auto}
+.orbit .ring{position:absolute;inset:13.5%;border:1.5px solid var(--line);border-radius:50%}
+.orbit .ring::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid transparent;border-top-color:var(--c1);animation:spin 5s linear infinite}
+.orbit .core{position:absolute;inset:33%;border-radius:50%;background:var(--bg);box-shadow:var(--shadow);display:grid;place-items:center;text-align:center;font-size:.8rem;color:var(--muted);line-height:1.3}
+.orbit .core b{display:block;font-size:1.8rem;font-weight:700;letter-spacing:-.03em;background:var(--apple-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.node{position:absolute;width:27%;height:27%;border-radius:50%;background:var(--panel);border:none;box-shadow:var(--shadow);display:grid;place-items:center;text-align:center;cursor:pointer;font-weight:600;font-size:.85rem;padding:8px;color:var(--text);font-family:inherit;letter-spacing:-.01em;
+  transition:transform .7s var(--ease),background .5s var(--ease2),color .5s var(--ease2),box-shadow .7s var(--ease)}
+.node .n{display:block;font-size:1.6rem;font-weight:700;color:var(--nc);transition:color .5s}
+.node:hover{transform:scale(1.07)}
+.node.on{background:var(--nc);color:#fff;transform:scale(1.14);box-shadow:0 18px 40px color-mix(in srgb,var(--nc) 45%,transparent)}
+.node.on .n{color:#fff}
+.node:nth-of-type(1){top:0;left:36.5%;--nc:var(--c1)}
+.node:nth-of-type(2){top:36.5%;right:0;--nc:var(--c2)}
+.node:nth-of-type(3){bottom:0;left:36.5%;--nc:var(--c3)}
+.node:nth-of-type(4){top:36.5%;left:0;--nc:var(--c4)}
+.phase-panel{background:var(--panel);border-radius:var(--radius);padding:44px;min-height:440px;box-shadow:var(--shadow)}
+.phase-panel h3{font-size:2.4rem;font-weight:700;letter-spacing:-.035em;color:var(--pc,var(--c1))}
+.phase-panel .q{color:var(--muted);font-size:1.15rem;font-weight:500;margin-bottom:18px}
+.phase-panel ul{list-style:none;margin:18px 0 24px}
+.phase-panel li{padding:11px 0 11px 28px;position:relative;border-bottom:1px solid color-mix(in srgb,var(--line) 55%,transparent)}
+.phase-panel li::before{content:"";position:absolute;left:6px;top:20px;width:8px;height:8px;border-radius:50%;background:var(--pc,var(--c1))}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-size:.8rem;font-weight:500;padding:6px 14px;border-radius:980px;background:color-mix(in srgb,var(--pc,var(--c1)) 12%,transparent);color:var(--pc,var(--c1))}
+.example{margin-top:22px;background:var(--bg2);border-radius:18px;padding:18px 20px;font-size:.95rem}
+.example b{color:var(--c5)}
+.fade-swap{animation:swap .8s var(--ease) both}
+.fade-swap li{animation:swap .8s var(--ease) both}
+.fade-swap li:nth-child(2){animation-delay:.05s}.fade-swap li:nth-child(3){animation-delay:.1s}
+.fade-swap li:nth-child(4){animation-delay:.15s}.fade-swap li:nth-child(5){animation-delay:.2s}
+
+/* =========================================================
+   PILARES (tarjetas con botón "+")
+   ========================================================= */
+.pillar{cursor:pointer;padding:36px 32px 80px}
+.pillar .ico{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;margin-bottom:24px;background:var(--pc);color:#fff;box-shadow:0 10px 24px color-mix(in srgb,var(--pc) 35%,transparent);transition:transform .7s var(--ease)}
+.pillar:hover .ico{transform:scale(1.08) rotate(-4deg)}
+.pillar .ico svg{width:28px;height:28px}
+.pillar .num{position:absolute;top:28px;right:30px;font-size:.95rem;font-weight:600;color:var(--muted)}
+.pillar h3{font-size:1.5rem;letter-spacing:-.025em}
+.pillar p{color:var(--muted)}
+.pillar .more{position:absolute;left:32px;bottom:34px;color:var(--c1);font-weight:500;font-size:.95rem}
+.pillar::after{content:"+";position:absolute;right:24px;bottom:24px;width:38px;height:38px;border-radius:50%;background:var(--text);color:var(--bg);display:grid;place-items:center;font-size:1.5rem;font-weight:300;line-height:1;transition:transform .6s var(--ease)}
+.pillar:hover::after{transform:rotate(90deg)}
+.pillar:focus-visible{outline:3px solid var(--c1);outline-offset:4px}
+
+/* ---------- modal ---------- */
+dialog{border:none;border-radius:32px;max-width:780px;width:calc(100% - 32px);background:var(--bg);color:var(--text);padding:0;box-shadow:0 50px 120px rgba(0,0,0,.3);margin:auto}
+dialog[open]{animation:pop .7s var(--ease)}
+dialog.closing{animation:popOut .35s var(--ease2) forwards}
+dialog::backdrop{background:rgba(0,0,0,.45);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);animation:fade .4s ease}
+dialog.closing::backdrop{animation:fadeOut .35s ease forwards}
+.modal-head{padding:48px 48px 8px;position:relative}
+.modal-head h2{letter-spacing:-.035em}
+.modal-body{padding:8px 48px 48px;max-height:62vh;overflow:auto;font-size:1.05rem}
+.modal-body h4{margin:28px 0 8px;font-size:1.25rem;letter-spacing:-.02em;color:var(--pc)}
+.modal-body ul{padding-left:20px}
+.modal-body li{margin:8px 0}
+.modal-body li::marker{color:var(--pc)}
+.close{position:absolute;top:22px;right:22px;background:var(--bg2)}
+
+/* =========================================================
+   NOC (sección oscura)
+   ========================================================= */
+.dash{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:80px}
+.metric{background:var(--panel);border-radius:24px;padding:24px}
+.metric .lbl{font-size:.8rem;font-weight:600;color:var(--muted)}
+.metric .val{font-size:2.4rem;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin:4px 0 12px}
+.meter{height:6px;border-radius:99px;background:color-mix(in srgb,var(--text) 10%,transparent);overflow:hidden}
+.meter i{display:block;height:100%;border-radius:99px;background:var(--mc);transition:width 1s var(--ease),background .5s}
+.spark{width:100%;height:44px;margin-top:12px}
+.log{grid-column:1/-1;background:var(--panel);border-radius:24px;padding:22px 24px;font-family:var(--mono);font-size:.8rem;height:176px;overflow:hidden;color:#a1a1a6}
+.log div{animation:swap .6s var(--ease);padding:2px 0}
+.dash-ctrl{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:32px}
+
+/* =========================================================
+   SEGURIDAD (capas)
+   ========================================================= */
+.shield{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center;margin-top:80px}
+.layers{position:relative;aspect-ratio:1;max-width:460px;margin:auto;width:100%}
+.layer{position:absolute;border-radius:50%;display:flex;justify-content:center;align-items:flex-start;padding-top:10px;font-size:.68rem;font-weight:600;letter-spacing:.06em;cursor:pointer;color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.08);transition:transform .7s var(--ease),box-shadow .7s var(--ease),filter .4s}
+.layer:hover{filter:brightness(1.3)}
+.layer.on{box-shadow:0 0 0 2px rgba(255,255,255,.9),0 0 70px rgba(191,90,242,.35);transform:scale(1.015)}
+.layer:nth-child(1){inset:0;background:#1c1c1e}
+.layer:nth-child(2){inset:11%;background:#221f33}
+.layer:nth-child(3){inset:22%;background:#2f1f47}
+.layer:nth-child(4){inset:33%;background:#4a1d4c}
+.layer:nth-child(5){inset:42%;background:var(--apple-grad);align-items:center;padding:0;color:#fff;font-size:.8rem;text-align:center}
+.layer-info{min-height:230px;--pc:var(--c3)}
+.layer-info h3{font-size:2.4rem;font-weight:700;letter-spacing:-.035em}
+.cia{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:28px}
+.cia div{background:var(--panel);border-radius:20px;padding:18px 12px;text-align:center;font-size:.85rem;font-weight:500}
+.cia b{display:block;font-size:2rem;font-weight:700;background:var(--apple-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* =========================================================
+   Línea de tiempo
+   ========================================================= */
+.timeline{position:relative;margin:80px auto 0;padding-left:44px;max-width:860px}
+.timeline::before{content:"";position:absolute;left:12px;top:10px;bottom:10px;width:2px;border-radius:2px;background:linear-gradient(#0894ff,#c959dd,#ff2e54,#ff9004)}
+.tl{margin-bottom:22px;overflow:visible;opacity:0;translate:-30px 0;filter:blur(8px)}
+.tl.show{opacity:1;translate:0 0;filter:none}
+.tl::before{content:"";position:absolute;left:-38px;top:34px;width:14px;height:14px;border-radius:50%;background:var(--bg2);border:3px solid var(--c1)}
+.tl .when{font-size:.8rem;font-weight:600;color:var(--c5);letter-spacing:.02em}
+
+/* ---------- tabla ---------- */
+.table-wrap{overflow-x:auto;margin-top:64px;border-radius:var(--radius);background:var(--panel)}
+table{width:100%;border-collapse:collapse;min-width:680px}
+th,td{padding:20px 24px;text-align:left;border-bottom:1px solid color-mix(in srgb,var(--line) 55%,transparent);font-size:.95rem;vertical-align:top}
+th{font-size:.8rem;font-weight:600;color:var(--muted)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{transition:background .3s}
+tbody tr:hover{background:color-mix(in srgb,var(--c1) 6%,transparent)}
+td b{color:var(--text);font-weight:600}
+
+/* ---------- búsqueda ---------- */
+.search-box{background:var(--panel);border-radius:980px;display:flex;align-items:center;padding:6px 6px 6px 24px;gap:10px;margin:28px 0 16px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.search-box code{flex:1;font-family:var(--mono);font-size:.9rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.search-box .btn{margin:0}
+.op-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.op-list button{font-family:var(--mono);font-size:.8rem;padding:8px 16px;border-radius:980px;border:none;background:var(--panel);color:var(--text);cursor:pointer;transition:background .4s var(--ease2),color .4s var(--ease2),transform .4s var(--ease)}
+.op-list button:hover{transform:translateY(-2px)}
+.op-list button.on{background:var(--c1);color:#fff}
+#opExplain{color:var(--muted);min-height:3em}
+.db{display:flex;gap:16px;align-items:flex-start}
+.db .badge{flex:none;width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-weight:700;background:var(--panel);color:var(--c2);box-shadow:var(--shadow)}
+
+/* ---------- quiz ---------- */
+.quiz{max-width:720px;margin:64px auto 0}
+.quiz .qcard{background:var(--panel);border-radius:32px;padding:44px}
+.qprog{display:flex;gap:6px;margin-bottom:26px}
+.qprog i{flex:1;height:4px;border-radius:99px;background:color-mix(in srgb,var(--text) 12%,transparent);transition:background .5s}
+.qprog i.done{background:var(--c1)}
+.opt{display:block;width:100%;text-align:left;margin:10px 0;padding:18px 22px;border-radius:16px;border:1.5px solid transparent;background:var(--bg);color:var(--text);cursor:pointer;font-family:inherit;font-size:1rem;letter-spacing:-.01em;transition:transform .5s var(--ease),border-color .3s,background .3s}
+.opt:hover:not(:disabled){border-color:var(--c1);transform:scale(1.01)}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--c4);background:color-mix(in srgb,var(--c4) 12%,var(--bg))}
+.opt.wrong{border-color:var(--c3);background:color-mix(in srgb,var(--c3) 12%,var(--bg));animation:shake .45s}
+.feedback{margin-top:14px;color:var(--muted);min-height:1.5em}
+.score{text-align:center}
+.score .big{font-size:5.5rem;font-weight:700;letter-spacing:-.05em;line-height:1.1}
+
+/* ---------- conclusión / referencias / footer ---------- */
+.concl{background:var(--bg);color:var(--text);border-radius:40px;padding:96px 56px;text-align:center;position:relative;overflow:hidden}
+.concl::before{content:"";position:absolute;inset:-50%;background:conic-gradient(from 0deg,#0894ff40,#c959dd40,#ff2e5440,#ff900440,#0894ff40);animation:spin 24s linear infinite;filter:blur(70px)}
+.concl>*{position:relative}
+.concl p{max-width:780px;margin:22px auto 0;font-size:1.2rem;color:var(--muted)}
+.concl p b{color:var(--text)}
+.refs{max-width:860px;margin-left:auto;margin-right:auto}
+.refs li{margin:0 0 14px 24px;text-indent:-24px;list-style:none;color:var(--muted);font-size:.9rem;line-height:1.5}
+.refs li i{color:var(--text)}
+footer{background:var(--bg2);padding:32px 0;text-align:center;color:var(--muted);font-size:.8rem}
+footer .mono{color:var(--text)}
+#toTop{position:fixed;right:22px;bottom:22px;z-index:80;width:44px;height:44px;background:var(--nav);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:var(--shadow-h);opacity:0;translate:0 20px;pointer-events:none;transition:opacity .5s var(--ease),translate .6s var(--ease)}
+#toTop.show{opacity:1;translate:0 0;pointer-events:auto}
+
+/* =========================================================
+   Aparición al hacer scroll (fade + blur + subida)
+   ========================================================= */
+.reveal{opacity:0;translate:0 50px;scale:.98;filter:blur(10px);transition:opacity 1.1s var(--ease),translate 1.4s var(--ease),scale 1.4s var(--ease),filter 1.1s var(--ease)}
+.reveal.show{opacity:1;translate:0 0;scale:1;filter:none}
+
+/* ---------- responsive ---------- */
+.cycle>*,.shield>*,.def>*,.dash>*,.grid-2>*,.grid-3>*{min-width:0}
+@media(max-width:1000px){.cycle{grid-template-columns:1fr}}
+@media(max-width:800px){.def,.shield{grid-template-columns:1fr}.dash{grid-template-columns:1fr 1fr}section{padding:110px 0}}
+@media(max-width:480px){
+  .logo{font-size:.85rem}
+  .node{font-size:.66rem;padding:4px}.node .n{font-size:1.1rem}.orbit .core{font-size:.65rem}.orbit .core b{font-size:1.2rem}
+  .phase-panel,.quiz .qcard{padding:26px}.phase-panel h3,.layer-info h3{font-size:1.9rem}
+  .dash,.cia{grid-template-columns:1fr}
+  .layer{font-size:.5rem;white-space:nowrap}.layer:nth-child(5){font-size:.62rem}
+  .concl{padding:64px 22px;border-radius:28px}
+  .pillars-mini b{font-size:1.9rem}
+  .modal-head{padding:40px 24px 6px}.modal-body{padding:8px 24px 32px}
+}
+
+/* ---------- transición de tema (View Transitions API) ---------- */
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+
+@keyframes pulse{50%{opacity:.35}}
+@keyframes blink{50%{opacity:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes swap{from{opacity:0;transform:translateY(16px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes rise{from{opacity:0;transform:translateY(30px);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
+@keyframes pop{from{opacity:0;transform:translateY(24px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes popOut{to{opacity:0;transform:translateY(12px) scale(.96)}}
+@keyframes fade{from{opacity:0}}
+@keyframes fadeOut{to{opacity:0}}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after,::backdrop{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0s!important}
+  .reveal,.tl{opacity:1;translate:0 0;scale:1;filter:none}
+}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+
+<!-- ================= NAV ================= -->
+<nav>
+  <div class="wrap">
+    <a href="#hero" class="logo"><span class="dot"></span>GRTIC://lab-04</a>
+    <ul id="menu">
+      <li><a href="#que-es">¿Qué es?</a></li>
+      <li><a href="#ciclo">Ciclo de vida</a></li>
+      <li><a href="#importancia">Importancia</a></li>
+      <li><a href="#caso">Caso</a></li>
+      <li><a href="#busqueda">Investigación</a></li>
+      <li><a href="#quiz">Quiz</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="icon-btn" id="themeBtn" title="Cambiar tema" aria-label="Cambiar tema">◐</button>
+      <button class="icon-btn" id="menuBtn" aria-label="Menú">☰</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header id="hero" class="hero">
+  <canvas id="net" aria-hidden="true"></canvas>
+  <div class="wrap hero-grid">
+    <div>
+      <span class="tag">Laboratorio #4 · GRTIC</span>
+      <h1>Gerencia de<br><span class="grad">Recursos TIC</span></h1>
+      <p class="typing" id="typing"></p>
+      <p class="sub">La tecnología no se “compra”: se <b>planifica, diseña, implementa y evalúa</b>. Bienvenido al centro de mando donde la infraestructura tecnológica se convierte en ventaja estratégica.</p>
+      <a href="#ciclo" class="btn primary">Iniciar recorrido →</a>
+      <a href="#quiz" class="btn">Ponete a prueba</a>
+    </div>
+    <div class="terminal" aria-hidden="true">
+      <div class="bar"><i></i><i></i><i></i></div>
+      <pre id="term"></pre>
+    </div>
+  </div>
+  <div class="scroll-hint">▼ scroll</div>
+</header>
+
+<!-- ================= QUÉ ES ================= -->
+<section id="que-es">
+  <div class="wrap">
+    <span class="tag reveal">01 · Concepto</span>
+    <h2 class="reveal">¿Qué es la gerencia de <span class="grad">recursos tecnológicos</span>?</h2>
+    <p class="lead reveal">Es la disciplina que dirige el ciclo completo de la infraestructura de Tecnologías de la Información y Comunicación (TIC) de una organización —hardware, software, redes, datos, servicios y personas— para que esté <b>alineada con los objetivos del negocio</b>, genere valor, controle riesgos y use los recursos de forma eficiente.</p>
+
+    <div class="def">
+      <div class="reveal">
+        <p class="quote">“La gobernanza de TI consiste en especificar los derechos de decisión y el marco de responsabilidades para fomentar un comportamiento deseable en el uso de las TI.”<small>— Weill &amp; Ross (2004), <i>IT Governance</i></small></p>
+        <p style="margin-top:22px;color:var(--muted)">En otras palabras: no alcanza con tener buenos equipos. Hay que decidir <b>quién decide</b>, <b>en qué se invierte</b>, <b>cómo se mide</b> y <b>cómo se protege</b>. Ahí es donde entra la gerencia TIC: es el puente entre la estrategia de la empresa y la tecnología que la hace posible.</p>
+      </div>
+      <div class="reveal">
+        <div class="pillars-mini">
+          <div><b class="grad">4</b><span>fases del ciclo de vida</span></div>
+          <div><b class="grad">6</b><span>pilares de gestión</span></div>
+          <div><b class="grad">3</b><span>objetivos: valor, riesgo, recursos</span></div>
+        </div>
+        <div class="grid-3" style="margin-top:14px;grid-template-columns:1fr 1fr">
+          <div class="card"><h3>🎯 Alineación</h3><p style="color:var(--muted);font-size:.92rem">Cada inversión tecnológica responde a una meta del negocio.</p></div>
+          <div class="card"><h3>💰 Eficiencia</h3><p style="color:var(--muted);font-size:.92rem">Optimizar costos totales de propiedad (TCO) y retorno.</p></div>
+          <div class="card"><h3>🛡️ Riesgo</h3><p style="color:var(--muted);font-size:.92rem">Proteger información, continuidad y cumplimiento legal.</p></div>
+          <div class="card"><h3>📈 Valor</h3><p style="color:var(--muted);font-size:.92rem">Habilitar innovación, servicio al cliente y competitividad.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CICLO DE VIDA ================= -->
+<section id="ciclo" class="alt">
+  <div class="wrap">
+    <span class="tag reveal">02 · La gerencia de recursos tecnológicos</span>
+    <h2 class="reveal">El <span class="grad">ciclo de vida</span> de la infraestructura TIC</h2>
+    <p class="lead reveal">Planificación, diseño, implementación y evaluación no son pasos aislados: forman un <b>ciclo de mejora continua</b> (similar al ciclo PDCA de Deming). Lo que se aprende al evaluar vuelve a alimentar la planificación. <b>Hacé clic en cada fase</b> para explorarla.</p>
+
+    <div class="cycle">
+      <div class="orbit reveal">
+        <div class="ring"></div>
+        <div class="core"><div><b>PDCA</b>mejora<br>continua</div></div>
+        <button class="node on" data-phase="0"><div><span class="n">01</span>Planificación</div></button>
+        <button class="node" data-phase="1"><div><span class="n">02</span>Diseño</div></button>
+        <button class="node" data-phase="2"><div><span class="n">03</span>Implementación</div></button>
+        <button class="node" data-phase="3"><div><span class="n">04</span>Evaluación</div></button>
+      </div>
+      <div class="phase-panel reveal" id="phasePanel" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= IMPORTANCIA ================= -->
+<section id="importancia">
+  <div class="wrap">
+    <span class="tag reveal">03 · Importancia de la gestión de la infraestructura TIC</span>
+    <h2 class="reveal">Los <span class="grad">6 pilares</span> que sostienen todo</h2>
+    <p class="lead reveal">Una infraestructura TIC mal gestionada es como un edificio sin mantenimiento: puede verse bien por fuera, pero cualquier falla estructural lo derrumba. Estos seis pilares explican <b>por qué</b> gestionarla es crítico. Abrí cada tarjeta para ver el detalle.</p>
+    <div class="grid-3" id="pillars" style="margin-top:44px"></div>
+  </div>
+</section>
+
+<dialog id="modal">
+  <div class="modal-head"><button class="icon-btn close" id="closeModal" aria-label="Cerrar">✕</button><span class="tag" id="mTag"></span><h2 id="mTitle" style="font-size:1.9rem"></h2></div>
+  <div class="modal-body" id="mBody"></div>
+</dialog>
+
+<!-- ================= MONITOREO EN VIVO ================= -->
+<section id="monitoreo" class="dark">
+  <div class="wrap">
+    <span class="tag reveal">04 · Simulación · Monitoreo y optimización</span>
+    <h2 class="reveal">Así se ve un <span class="grad">NOC</span> en acción</h2>
+    <p class="lead reveal">Un Centro de Operaciones de Red (NOC) vigila la infraestructura 24/7. Esta simulación muestra por qué el monitoreo importa: <b>provocá una incidencia</b> y observá cómo la gestión proactiva la detecta y la corrige antes de que afecte al usuario.</p>
+    <div class="dash reveal" id="dash">
+      <div class="metric"><div class="lbl">CPU servidores</div><div class="val" id="vCpu">--</div><div class="meter"><i id="mCpu" style="--mc:var(--c1)"></i></div><svg class="spark" id="sCpu" viewBox="0 0 100 40" preserveAspectRatio="none"></svg></div>
+      <div class="metric"><div class="lbl">Memoria</div><div class="val" id="vRam">--</div><div class="meter"><i id="mRam" style="--mc:var(--c2)"></i></div><svg class="spark" id="sRam" viewBox="0 0 100 40" preserveAspectRatio="none"></svg></div>
+      <div class="metric"><div class="lbl">Ancho de banda</div><div class="val" id="vNet">--</div><div class="meter"><i id="mNet" style="--mc:var(--c4)"></i></div><svg class="spark" id="sNet" viewBox="0 0 100 40" preserveAspectRatio="none"></svg></div>
+      <div class="metric"><div class="lbl">Disponibilidad</div><div class="val" id="vUp">--</div><div class="meter"><i id="mUp" style="--mc:var(--c5)"></i></div><svg class="spark" id="sUp" viewBox="0 0 100 40" preserveAspectRatio="none"></svg></div>
+      <div class="log" id="log"></div>
+    </div>
+    <div class="dash-ctrl">
+      <button class="btn" id="incident">⚠️ Provocar incidencia</button>
+      <button class="btn" id="optimize">⚙️ Optimizar recursos</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SEGURIDAD ================= -->
+<section id="seguridad" class="dark">
+  <div class="wrap">
+    <span class="tag reveal">05 · Interactivo · Seguridad tecnológica</span>
+    <h2 class="reveal">Defensa en <span class="grad">profundidad</span></h2>
+    <p class="lead reveal">La seguridad no es un producto, es un sistema de capas. Si una falla, la siguiente contiene el ataque. En el centro está lo más valioso: <b>los datos</b>. Pasá el mouse o tocá cada capa.</p>
+    <div class="shield">
+      <div class="layers reveal" id="layers">
+        <div class="layer" data-l="0">POLÍTICAS Y PERSONAS</div>
+        <div class="layer" data-l="1">PERÍMETRO</div>
+        <div class="layer" data-l="2">RED INTERNA</div>
+        <div class="layer" data-l="3">EQUIPOS · APPS</div>
+        <div class="layer" data-l="4">DATOS</div>
+      </div>
+      <div class="reveal">
+        <div class="layer-info" id="layerInfo"></div>
+        <div class="cia">
+          <div><b>C</b>Confidencialidad<br><small style="color:var(--muted)">solo quien debe, accede</small></div>
+          <div><b>I</b>Integridad<br><small style="color:var(--muted)">los datos no se alteran</small></div>
+          <div><b>D</b>Disponibilidad<br><small style="color:var(--muted)">accesible cuando se necesita</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CASO PRÁCTICO ================= -->
+<section id="caso" class="alt">
+  <div class="wrap">
+    <span class="tag reveal">06 · Caso aplicado</span>
+    <h2 class="reveal">De la teoría a la práctica: <span class="grad">“Distribuidora Andina”</span></h2>
+    <p class="lead reveal">Caso ilustrativo (ficticio) de una PyME con 80 empleados y 3 sucursales que opera con equipos obsoletos, sin respaldos y con un sistema de inventario en hojas de cálculo. Así se aplica la gerencia TIC paso a paso:</p>
+    <div class="timeline">
+      <div class="tl card"><span class="when">MES 1 · PLANIFICACIÓN</span><h3>Diagnóstico y plan estratégico TIC</h3><p style="color:var(--muted)">Inventario de activos, entrevistas con gerencia, análisis FODA tecnológico. Se detecta que 40% de los equipos superan su vida útil y no hay copias de seguridad. Se define presupuesto y prioridades alineadas al objetivo de “reducir quiebres de stock”.</p></div>
+      <div class="tl card"><span class="when">MES 2 · DISEÑO</span><h3>Arquitectura objetivo</h3><p style="color:var(--muted)">Se diseña una red con VPN entre sucursales, un ERP en la nube, política de respaldo 3-2-1 (3 copias, 2 medios, 1 fuera del sitio) y segmentación de red para separar la red de invitados de la administrativa.</p></div>
+      <div class="tl card"><span class="when">MES 3–5 · IMPLEMENTACIÓN</span><h3>Despliegue por fases</h3><p style="color:var(--muted)">Piloto en la casa matriz, migración de datos, renovación de equipos críticos, capacitación de usuarios clave y puesta en marcha gradual en sucursales para minimizar interrupciones.</p></div>
+      <div class="tl card"><span class="when">MES 6 · EVALUACIÓN</span><h3>Medición y ajuste</h3><p style="color:var(--muted)">Se miden KPIs: disponibilidad del ERP, tiempo de resolución de incidentes, satisfacción del usuario y exactitud del inventario. Los hallazgos alimentan el plan del siguiente año: el ciclo vuelve a empezar.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MARCOS DE REFERENCIA ================= -->
+<section id="marcos">
+  <div class="wrap">
+    <span class="tag reveal">07 · Marcos y estándares</span>
+    <h2 class="reveal">Las <span class="grad">herramientas</span> del gerente TIC</h2>
+    <p class="lead reveal">No hace falta reinventar la rueda: existen marcos internacionales que recogen buenas prácticas probadas para gestionar la tecnología.</p>
+    <div class="table-wrap reveal">
+      <table>
+        <thead><tr><th>Marco / Norma</th><th>Organismo</th><th>¿Para qué sirve?</th><th>Fase / pilar que apoya</th></tr></thead>
+        <tbody>
+          <tr><td><b>COBIT 2019</b></td><td>ISACA</td><td>Gobierno y gestión de la información y la tecnología empresarial; alinea TI con objetivos del negocio.</td><td>Planificación · Evaluación</td></tr>
+          <tr><td><b>ITIL 4</b></td><td>AXELOS / PeopleCert</td><td>Buenas prácticas de gestión de servicios de TI: incidentes, cambios, activos, mejora continua.</td><td>Implementación · Monitoreo</td></tr>
+          <tr><td><b>ISO/IEC 27001:2022</b></td><td>ISO / IEC</td><td>Requisitos para un Sistema de Gestión de Seguridad de la Información (SGSI).</td><td>Seguridad tecnológica</td></tr>
+          <tr><td><b>ISO/IEC 20000-1:2018</b></td><td>ISO / IEC</td><td>Requisitos para un sistema de gestión de servicios de TI certificable.</td><td>Gestión de hardware y software</td></tr>
+          <tr><td><b>NIST CSF 2.0</b></td><td>NIST (EE. UU.)</td><td>Marco de ciberseguridad con seis funciones: Gobernar, Identificar, Proteger, Detectar, Responder, Recuperar.</td><td>Seguridad · Monitoreo</td></tr>
+          <tr><td><b>TOGAF</b></td><td>The Open Group</td><td>Método para desarrollar la arquitectura empresarial (negocio, datos, aplicaciones, tecnología).</td><td>Diseño · Integración</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= METODOLOGÍA DE BÚSQUEDA ================= -->
+<section id="busqueda" class="alt">
+  <div class="wrap">
+    <span class="tag reveal">08 · Metodología de investigación</span>
+    <h2 class="reveal">¿Cómo se <span class="grad">investigó</span> este sitio?</h2>
+    <p class="lead reveal">Se combinaron técnicas de búsqueda avanzada en un buscador general con consultas en bases de datos académicas, para contrastar fuentes divulgativas con literatura científica y normativa oficial.</p>
+
+    <div class="grid-2" style="margin-top:36px">
+      <div class="reveal">
+        <h3>🔎 Operadores avanzados de Google</h3>
+        <div class="search-box"><code id="query">gestión de infraestructura TIC</code><button class="btn primary" style="padding:10px 18px" tabindex="-1">Buscar</button></div>
+        <div class="op-list" id="ops"></div>
+        <p id="opExplain">Seleccioná un operador para ver cómo refina la búsqueda.</p>
+      </div>
+      <div class="reveal">
+        <h3>📚 Bases de datos académicas</h3>
+        <div style="display:grid;gap:16px;margin-top:22px">
+          <div class="db"><div class="badge">GS</div><div><b>Google Scholar</b><br><span style="color:var(--muted);font-size:.92rem">Artículos, tesis y libros; permite ver cuántas veces fue citado un trabajo y filtrar por año.</span></div></div>
+          <div class="db"><div class="badge">SC</div><div><b>SciELO</b><br><span style="color:var(--muted);font-size:.92rem">Revistas científicas de acceso abierto de Iberoamérica, útil para contexto regional.</span></div></div>
+          <div class="db"><div class="badge">RE</div><div><b>Redalyc</b><br><span style="color:var(--muted);font-size:.92rem">Red de revistas científicas de América Latina, el Caribe, España y Portugal.</span></div></div>
+          <div class="db"><div class="badge">DI</div><div><b>Dialnet</b><br><span style="color:var(--muted);font-size:.92rem">Portal bibliográfico de literatura científica hispana.</span></div></div>
+          <div class="db"><div class="badge">IE</div><div><b>IEEE Xplore</b><br><span style="color:var(--muted);font-size:.92rem">Literatura técnica en ingeniería, redes y seguridad informática.</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card reveal" style="margin-top:30px">
+      <h3>✅ Criterios de selección de fuentes</h3>
+      <p style="color:var(--muted)">Autoría identificable · Organismo emisor reconocido (ISO, ISACA, NIST, UNESCO) · Publicación revisada por pares · Vigencia de la norma consultada · Contraste entre al menos dos fuentes independientes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= QUIZ ================= -->
+<section id="quiz">
+  <div class="wrap">
+    <span class="tag reveal">09 · Autoevaluación</span>
+    <h2 class="reveal">¿Cuánto <span class="grad">aprendiste</span>?</h2>
+    <p class="lead reveal">Seis preguntas. Sin trampa. 😉</p>
+    <div class="quiz reveal"><div class="qcard" id="qcard"></div></div>
+  </div>
+</section>
+
+<!-- ================= CONCLUSIÓN ================= -->
+<section id="conclusion" style="padding-top:40px">
+  <div class="wrap">
+    <div class="concl reveal">
+      <span class="tag">10 · Conclusión</span>
+      <h2>La tecnología no es un gasto: <span class="grad">es infraestructura estratégica</span></h2>
+      <p>La gerencia de recursos TIC garantiza que cada computadora, servidor, licencia y red trabaje a favor de los objetivos de la organización. Planificar, diseñar, implementar y evaluar —en un ciclo continuo— permite invertir con criterio, anticiparse a fallas, proteger la información, preparar a las personas, integrar sistemas y usar la tecnología de manera ética. Una empresa que gestiona bien su infraestructura TIC no solo funciona mejor: <b>compite mejor</b>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= REFERENCIAS ================= -->
+<section id="referencias" style="padding-top:40px">
+  <div class="wrap">
+    <span class="tag reveal">Referencias (APA 7)</span>
+    <ul class="refs reveal" style="margin-top:20px">
+      <li>AXELOS. (2019). <i>ITIL Foundation: ITIL 4 edition</i>. TSO.</li>
+      <li>International Organization for Standardization. (2018). <i>ISO/IEC 20000-1:2018 Information technology — Service management — Part 1: Service management system requirements</i>. ISO.</li>
+      <li>International Organization for Standardization. (2022). <i>ISO/IEC 27001:2022 Information security, cybersecurity and privacy protection — Information security management systems — Requirements</i>. ISO.</li>
+      <li>ISACA. (2018). <i>COBIT 2019 framework: Introduction and methodology</i>. ISACA.</li>
+      <li>Laudon, K. C., &amp; Laudon, J. P. (2016). <i>Sistemas de información gerencial</i> (14.ª ed.). Pearson Educación.</li>
+      <li>National Institute of Standards and Technology. (2024). <i>The NIST Cybersecurity Framework (CSF) 2.0</i> (NIST CSWP 29). https://doi.org/10.6028/NIST.CSWP.29</li>
+      <li>The Open Group. (2022). <i>The TOGAF standard</i> (10th ed.). The Open Group.</li>
+      <li>UNESCO. (2021). <i>Recomendación sobre la ética de la inteligencia artificial</i>. UNESCO.</li>
+      <li>Weill, P., &amp; Ross, J. W. (2004). <i>IT governance: How top performers manage IT decision rights for superior results</i>. Harvard Business School Press.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><span class="mono">Laboratorio #4</span> · Gerencia de Recursos de Tecnología de Información y Comunicación</p>
+    <p style="margin-top:6px">Elaborado por: <b>[Tu nombre]</b> · 2026 · Hecho con HTML, CSS y JavaScript puro</p>
+  </div>
+</footer>
+
+<button class="icon-btn" id="toTop" aria-label="Volver arriba">↑</button>
+
+<script>
+/* ===================== DATOS ===================== */
+const PHASES = [
+  {t:"Planificación",c:"var(--c1)",q:"¿Qué necesita el negocio y qué tecnología lo habilita?",
+   d:"Es la fase estratégica. Se analiza la situación actual de la infraestructura, se identifican las necesidades de la organización y se define un Plan Estratégico de TI (PETI) alineado a la misión, visión y objetivos de la empresa.",
+   a:["Diagnóstico e inventario de activos TIC (hardware, software, redes, licencias).","Análisis de brechas: situación actual vs. situación deseada.","Definición de objetivos, prioridades, presupuesto y cronograma.","Análisis de riesgos, costos (TCO) y retorno de la inversión (ROI).","Identificación de requerimientos legales y de cumplimiento."],
+   k:["PETI","FODA TIC","TCO / ROI","COBIT 2019","Balanced Scorecard"],
+   e:"Una clínica planifica digitalizar sus historias clínicas en 12 meses para reducir tiempos de atención."},
+  {t:"Diseño",c:"var(--c2)",q:"¿Cómo debe verse la solución para cumplir lo planificado?",
+   d:"Se traduce el plan en una arquitectura concreta: qué componentes, cómo se conectan, qué capacidad necesitan, cómo se protegen y cómo escalarán. Un buen diseño evita el “parche sobre parche”.",
+   a:["Arquitectura de red, servidores, almacenamiento y nube (on-premise, cloud o híbrida).","Dimensionamiento de capacidad y previsión de crecimiento (escalabilidad).","Diseño de seguridad desde el inicio (security by design).","Planes de continuidad del negocio y recuperación ante desastres.","Selección de proveedores, estándares y especificaciones técnicas."],
+   k:["TOGAF","Diagramas de red","Alta disponibilidad","Redundancia","Security by design"],
+   e:"La clínica diseña un servidor redundante, conexión de respaldo y cifrado de datos de pacientes."},
+  {t:"Implementación",c:"var(--c3)",q:"¿Cómo lo ponemos en marcha sin detener la operación?",
+   d:"Es la ejecución: adquisición, instalación, configuración, migración y puesta en producción. Se gestiona como proyecto, con control de cambios para minimizar el impacto en los usuarios.",
+   a:["Adquisición e instalación de hardware y software.","Configuración, pruebas (funcionales, de carga y de seguridad).","Migración de datos y convivencia con sistemas anteriores.","Gestión del cambio y capacitación de usuarios.","Despliegue gradual: piloto → producción, con plan de reversión."],
+   k:["ITIL 4","Gestión de proyectos","Gestión de cambios","Pruebas piloto","Documentación"],
+   e:"La clínica prueba el sistema en un consultorio piloto antes de extenderlo a toda la institución."},
+  {t:"Evaluación",c:"var(--c4)",q:"¿Está funcionando? ¿Genera el valor esperado?",
+   d:"Se mide el desempeño de la infraestructura frente a los objetivos definidos. La evaluación cierra el ciclo y abre el siguiente: detecta mejoras, obsolescencia y nuevas necesidades.",
+   a:["Indicadores clave (KPI): disponibilidad, tiempos de respuesta, incidentes.","Cumplimiento de acuerdos de nivel de servicio (SLA).","Auditorías técnicas y de seguridad.","Encuestas de satisfacción de usuarios.","Análisis costo-beneficio y plan de mejora continua."],
+   k:["KPI","SLA","Auditoría TI","PDCA","Mejora continua"],
+   e:"La clínica verifica que el tiempo de búsqueda de historias clínicas bajó y ajusta lo que no funcionó."}
+];
+
+const ICONS = {
+  hw:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
+  mon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>',
+  sec:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+  cap:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/></svg>',
+  int:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><path d="M8.5 7.5l2 8M15.5 7.5l-2 8M9 6h6"/></svg>',
+  eti:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M5 7h14M5 7l-3 7a3 3 0 006 0zM19 7l-3 7a3 3 0 006 0z"/></svg>'
+};
+
+const PILLARS = [
+  {i:"hw",c:"var(--c1)",t:"Gestión de hardware y software",
+   s:"Controlar todo el ciclo de vida de los activos: desde su compra hasta su retiro.",
+   b:`<p>Consiste en administrar los activos tecnológicos físicos (computadoras, servidores, impresoras, equipos de red) y lógicos (sistemas operativos, aplicaciones, licencias) durante todo su ciclo de vida: <b>adquisición → instalación → operación → mantenimiento → retiro</b>.</p>
+   <h4>¿Por qué es importante?</h4><ul><li>Evita compras innecesarias y equipos subutilizados.</li><li>Garantiza el <b>cumplimiento de licencias</b> y evita sanciones legales por software no autorizado.</li><li>Permite planificar la renovación antes de que la obsolescencia cause fallas.</li><li>Facilita el soporte técnico: se sabe qué hay, dónde está y quién lo usa.</li></ul>
+   <h4>Prácticas clave</h4><ul><li>Inventario actualizado y base de datos de configuración (CMDB).</li><li>Mantenimiento preventivo y correctivo programado.</li><li>Gestión de parches y actualizaciones.</li><li>Disposición responsable de equipos (borrado seguro y reciclaje de residuos electrónicos).</li></ul>`},
+  {i:"mon",c:"var(--c4)",t:"Monitoreo y optimización de recursos",
+   s:"Ver en tiempo real cómo trabaja la infraestructura para anticiparse a las fallas.",
+   b:`<p>Es la vigilancia continua del rendimiento de servidores, redes, aplicaciones y servicios, para detectar problemas <b>antes</b> de que los usuarios los noten y aprovechar al máximo la capacidad instalada.</p>
+   <h4>¿Por qué es importante?</h4><ul><li>Pasa de una gestión <b>reactiva</b> (“apagar incendios”) a una <b>proactiva</b>.</li><li>Reduce tiempos de inactividad y pérdidas económicas asociadas.</li><li>Permite optimizar costos: redistribuir cargas, virtualizar, apagar lo que no se usa.</li><li>Genera datos para decidir inversiones con evidencia.</li></ul>
+   <h4>Prácticas clave</h4><ul><li>Herramientas de monitoreo con alertas y umbrales.</li><li>Gestión de capacidad y de la demanda.</li><li>Virtualización y uso eficiente de la nube.</li><li>Indicadores: disponibilidad, uso de CPU/memoria, latencia, tiempo medio de reparación (MTTR).</li></ul>
+   <p style="margin-top:12px">👉 Probá la <a href="#monitoreo" onclick="modal.close()">simulación del NOC</a> más abajo.</p>`},
+  {i:"sec",c:"var(--c3)",t:"Seguridad tecnológica",
+   s:"Proteger la confidencialidad, integridad y disponibilidad de la información.",
+   b:`<p>Conjunto de políticas, procesos y controles técnicos que protegen los activos de información frente a amenazas como malware, <i>ransomware</i>, phishing, accesos no autorizados, fallas y desastres.</p>
+   <h4>¿Por qué es importante?</h4><ul><li>La información es uno de los activos más valiosos de la empresa.</li><li>Un incidente puede detener la operación, generar pérdidas y dañar la reputación.</li><li>Existen obligaciones legales de protección de datos personales.</li></ul>
+   <h4>Prácticas clave</h4><ul><li>Sistema de Gestión de Seguridad de la Información (ISO/IEC 27001).</li><li>Control de accesos, contraseñas robustas y autenticación multifactor.</li><li>Firewalls, antimalware, cifrado y segmentación de redes.</li><li>Respaldos periódicos y plan de recuperación ante desastres.</li><li>Concientización del personal: el factor humano es el eslabón más atacado.</li></ul>
+   <p style="margin-top:12px">👉 Explorá las <a href="#seguridad" onclick="modal.close()">capas de defensa</a>.</p>`},
+  {i:"cap",c:"var(--c5)",t:"Capacitación continua",
+   s:"La mejor tecnología no sirve si las personas no saben usarla.",
+   b:`<p>Es el desarrollo permanente de competencias digitales del personal técnico y de los usuarios, acompañando la velocidad con la que cambia la tecnología.</p>
+   <h4>¿Por qué es importante?</h4><ul><li>Aumenta la <b>adopción</b> y el retorno de las inversiones tecnológicas.</li><li>Reduce errores humanos e incidentes de seguridad.</li><li>Mantiene al equipo de TI actualizado (nube, ciberseguridad, datos, IA).</li><li>Disminuye la resistencia al cambio.</li></ul>
+   <h4>Prácticas clave</h4><ul><li>Plan anual de capacitación basado en brechas de competencias.</li><li>Inducción tecnológica a nuevos colaboradores.</li><li>Certificaciones profesionales para el equipo técnico.</li><li>Simulacros de phishing y campañas de concientización.</li><li>Manuales, tutoriales y mesa de ayuda como apoyo al aprendizaje.</li></ul>`},
+  {i:"int",c:"var(--c2)",t:"Integración tecnológica",
+   s:"Que los sistemas “hablen entre sí” en lugar de funcionar como islas.",
+   b:`<p>Es lograr que aplicaciones, bases de datos, dispositivos y procesos trabajen de forma coordinada, compartiendo información de manera fluida y confiable.</p>
+   <h4>¿Por qué es importante?</h4><ul><li>Elimina la doble digitación y los datos duplicados o contradictorios.</li><li>Ofrece una visión única del negocio para tomar decisiones.</li><li>Automatiza procesos de punta a punta (ventas → inventario → facturación).</li><li>Facilita incorporar nuevas tecnologías sin romper lo existente.</li></ul>
+   <h4>Prácticas clave</h4><ul><li>Sistemas integrados de gestión (ERP, CRM).</li><li>Interfaces de programación (APIs) y estándares abiertos.</li><li>Arquitectura empresarial para planificar la integración (TOGAF).</li><li>Gobierno de datos: calidad, propiedad y definiciones comunes.</li></ul>`},
+  {i:"eti",c:"var(--c1)",t:"Ética y uso responsable de la tecnología",
+   s:"Usar la tecnología con respeto a las personas, la privacidad y el ambiente.",
+   b:`<p>Implica que las decisiones tecnológicas consideren su impacto en las personas y la sociedad: privacidad, transparencia, equidad, inclusión y sostenibilidad.</p>
+   <h4>¿Por qué es importante?</h4><ul><li>Genera confianza en clientes, empleados y sociedad.</li><li>Evita usos abusivos de datos personales y vigilancia desproporcionada.</li><li>Previene sesgos y discriminación en sistemas automatizados e inteligencia artificial.</li><li>Reduce el impacto ambiental (consumo energético, residuos electrónicos).</li></ul>
+   <h4>Prácticas clave</h4><ul><li>Políticas de uso aceptable de recursos tecnológicos.</li><li>Privacidad desde el diseño y cumplimiento de leyes de protección de datos.</li><li>Principios éticos para IA (p. ej., Recomendación de la UNESCO, 2021).</li><li>TI verde: eficiencia energética y reciclaje responsable.</li><li>Accesibilidad digital para todas las personas.</li></ul>`}
+];
+
+const LAYERS = [
+  {t:"Políticas y personas",d:"La capa más externa y la más atacada. Políticas de seguridad, roles y responsabilidades, concientización y capacitación. Un empleado entrenado detecta un correo de phishing que ningún filtro atrapó.",x:["Política de seguridad","Concientización","Clasificación de la información"]},
+  {t:"Perímetro",d:"El límite entre la red de la empresa e Internet. Controla qué entra y qué sale.",x:["Firewall","VPN","Filtrado web y de correo"]},
+  {t:"Red interna",d:"Aun dentro de la red, no todo debe verse con todo. La segmentación limita el movimiento de un atacante.",x:["Segmentación / VLAN","Detección de intrusos (IDS/IPS)","Wi-Fi seguro"]},
+  {t:"Equipos y aplicaciones",d:"Protección de cada computadora, servidor y aplicación.",x:["Antimalware / EDR","Parches al día","MFA y control de accesos"]},
+  {t:"Datos",d:"El núcleo: lo que realmente se protege. Si todas las capas fallan, los datos cifrados y respaldados siguen a salvo.",x:["Cifrado","Respaldos 3-2-1","Control de acceso mínimo necesario"]}
+];
+
+const OPS = [
+  {o:'"comillas"',q:'"gestión de infraestructura TIC"',e:"Busca la frase exacta, en ese orden. Elimina resultados que solo contienen palabras sueltas."},
+  {o:"site:",q:'"gestión de infraestructura TIC" site:edu',e:"Restringe los resultados a un dominio. Útil para priorizar universidades (.edu) u organismos oficiales (.gob, .org)."},
+  {o:"filetype:",q:'"gerencia de TI" filetype:pdf',e:"Devuelve solo archivos de un tipo; ideal para encontrar tesis, informes y documentos técnicos en PDF."},
+  {o:"OR",q:'"gestión TIC" OR "gestión de TI" empresa',e:"Amplía la búsqueda a sinónimos: devuelve resultados con cualquiera de los términos."},
+  {o:"-excluir",q:'"seguridad informática" pyme -curso -precio',e:"Excluye palabras para eliminar publicidad y resultados comerciales irrelevantes."},
+  {o:"intitle:",q:'intitle:"COBIT 2019" gobierno TI',e:"Solo muestra páginas que contengan el término en su título, aumentando la pertinencia."},
+  {o:"Herramientas → Fecha",q:'"ciberseguridad" pymes (último año)',e:"El filtro de fecha asegura información reciente, clave en un área que cambia tan rápido como las TIC."}
+];
+
+const QUIZ = [
+  {q:"¿Cuál es el orden correcto del ciclo de gestión de la infraestructura TIC?",o:["Diseño → Evaluación → Planificación → Implementación","Planificación → Diseño → Implementación → Evaluación","Implementación → Planificación → Diseño → Evaluación"],a:1,f:"Primero se define qué se necesita, luego cómo, después se ejecuta y finalmente se mide."},
+  {q:"¿Qué significa la tríada CID en seguridad de la información?",o:["Control, Inventario, Diseño","Confidencialidad, Integridad, Disponibilidad","Capacitación, Integración, Datos"],a:1,f:"Es la base de toda gestión de seguridad de la información."},
+  {q:"Un NOC que detecta una falla antes de que el usuario la note es un ejemplo de gestión…",o:["Reactiva","Proactiva","Correctiva"],a:1,f:"El monitoreo permite anticiparse, en lugar de apagar incendios."},
+  {q:"¿Qué marco se enfoca en la gestión de servicios de TI (incidentes, cambios, mejora continua)?",o:["ITIL 4","TOGAF","ISO/IEC 27001"],a:0,f:"ITIL reúne buenas prácticas de gestión de servicios de TI."},
+  {q:"La regla de respaldo 3-2-1 indica:",o:["3 servidores, 2 firewalls, 1 antivirus","3 copias, en 2 medios distintos, 1 fuera del sitio","3 usuarios, 2 contraseñas, 1 administrador"],a:1,f:"Así una sola falla o desastre no elimina todas las copias."},
+  {q:"¿Cuál de estas prácticas corresponde al pilar de ética y uso responsable?",o:["Virtualizar servidores","Privacidad desde el diseño y reciclaje responsable de equipos","Instalar una VPN"],a:1,f:"La ética TIC abarca privacidad, equidad y sostenibilidad."}
+];
+
+/* ===================== UTILIDADES ===================== */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+/* tema */
+const root = document.documentElement;
+try{ const t = localStorage.getItem('grtic-theme'); if(t) root.dataset.theme = t; }catch(e){}
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const flipTheme = () => {
+  const cur = root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  root.dataset.theme = cur === 'light' ? 'dark' : 'light';
+  try{ localStorage.setItem('grtic-theme', root.dataset.theme); }catch(e){}
+};
+$('#themeBtn').onclick = e => {
+  if (!document.startViewTransition || reduceMotion) return flipTheme();
+  const x = e.clientX, y = e.clientY, r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  document.startViewTransition(flipTheme).ready.then(() => root.animate(
+    {clipPath:[`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`]},
+    {duration:750, easing:'cubic-bezier(.16,1,.3,1)', pseudoElement:'::view-transition-new(root)'}));
+};
+
+/* menú móvil */
+$('#menuBtn').onclick = () => $('#menu').classList.toggle('open');
+$$('#menu a').forEach(a => a.onclick = () => $('#menu').classList.remove('open'));
+
+/* progreso de scroll + nav activo + botón subir */
+const sections = $$('section[id]');
+const heroText = $('.hero-grid>div'), term = $('.terminal');
+function heroFx(){
+  if (reduceMotion) return;
+  const y = scrollY, vh = innerHeight, p = Math.min(1, y / (vh * .8));
+  heroText.style.transform = `translateY(${y * .25}px) scale(${1 - p * .06})`;
+  heroText.style.opacity = Math.max(0, 1 - p * 1.1);
+  const r = term.getBoundingClientRect();
+  const t = Math.max(0, Math.min(1, 1 - (r.top - vh * .2) / (vh * .6)));
+  term.style.transform = `rotateX(${(1 - t) * 20}deg) scale(${.86 + .14 * t})`;
+}
+heroFx();
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  $('#progress').style.width = (h.scrollTop / (h.scrollHeight - h.clientHeight) * 100) + '%';
+  $('#toTop').classList.toggle('show', h.scrollTop > 600);
+  heroFx();
+  let cur = '';
+  sections.forEach(s => { if (s.getBoundingClientRect().top < 140) cur = s.id; });
+  $$('#menu a').forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + cur));
+}, {passive:true});
+$('#toTop').onclick = () => scrollTo({top:0});
+
+/* reveal on scroll */
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting) return;
+  const t = e.target; t.classList.add('show'); io.unobserve(t);
+  setTimeout(() => t.style.transitionDelay = '', 1800);
+}), {threshold:.12, rootMargin:'0px 0px -60px 0px'});
+const watch = el => {
+  const sib = [...el.parentElement.children].filter(c => c.matches('.reveal, .tl'));
+  el.style.transitionDelay = Math.min(sib.indexOf(el), 6) * 90 + 'ms';
+  io.observe(el);
+};
+$$('.reveal, .tl').forEach(watch);
+
+/* ===================== HERO: manchas de color ===================== */
+(() => {
+  const cv = $('#net'), ctx = cv.getContext('2d');
+  let W, H;
+  const resize = () => { W = cv.width = Math.max(1, cv.offsetWidth / 4 | 0); H = cv.height = Math.max(1, cv.offsetHeight / 4 | 0); };
+  addEventListener('resize', resize); resize();
+  const blobs = [['#0894ff',.2,.3,.00031],['#c959dd',.78,.25,.00023],['#ff2e54',.3,.78,.00027],['#ff9004',.8,.72,.00019]];
+  (function draw(t){
+    if (scrollY < innerHeight * 1.2){
+      ctx.clearRect(0,0,W,H);
+      blobs.forEach(([c,x,y,sp],i) => {
+        const cx = (x + Math.sin(t*sp + i) * .15) * W, cy = (y + Math.cos(t*sp*1.3 + i) * .15) * H, r = Math.max(W,H) * .38;
+        const g = ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+        g.addColorStop(0, c); g.addColorStop(1, c + '00');
+        ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+      });
+    }
+    requestAnimationFrame(draw);
+  })(0);
+})();
+
+/* typing */
+(() => {
+  const words = ["planificar.","diseñar.","implementar.","evaluar.","proteger.","optimizar."];
+  let w=0,i=0,del=false; const el = $('#typing');
+  (function tick(){
+    const word = "> gestionar es " + words[w];
+    el.textContent = word.slice(0,i);
+    if(!del && i<word.length) i++;
+    else if(del && i>15) i--;
+    else if(!del){ del=true; return setTimeout(tick,1400); }
+    else { del=false; w=(w+1)%words.length; }
+    setTimeout(tick, del?35:70);
+  })();
+})();
+
+/* terminal */
+(() => {
+  const lines = [
+    '<span class="k">$</span> grtic --audit infraestructura',
+    '[scan] inventario de activos ........ <span class="ok">OK</span>',
+    '[scan] licencias de software ........ <span class="ok">OK</span>',
+    '[scan] parches de seguridad ......... <span class="w">3 pendientes</span>',
+    '[scan] respaldos 3-2-1 .............. <span class="ok">OK</span>',
+    '[scan] capacitación del personal .... <span class="ok">82%</span>',
+    '[scan] integración ERP ↔ CRM ........ <span class="ok">OK</span>',
+    '',
+    '<span class="k">→</span> plan: <span class="ok">planificar</span> → diseñar → implementar → evaluar',
+    '<span class="k">$</span> _'
+  ];
+  let i = 0; const t = $('#term');
+  const add = () => { if(i<lines.length){ t.innerHTML += lines[i++] + '\n'; setTimeout(add, 380); } };
+  setTimeout(add, 600);
+})();
+
+/* ===================== CICLO ===================== */
+function showPhase(n){
+  const p = PHASES[n], el = $('#phasePanel');
+  el.style.setProperty('--pc', p.c);
+  el.innerHTML = `<div class="fade-swap">
+    <span class="tag" style="color:${p.c}">Fase 0${n+1} de 04</span>
+    <h3>${p.t}</h3><p class="q">${p.q}</p>
+    <p>${p.d}</p>
+    <ul>${p.a.map(x=>`<li>${x}</li>`).join('')}</ul>
+    <div class="chips">${p.k.map(x=>`<span class="chip">${x}</span>`).join('')}</div>
+    <div class="example"><b>Ejemplo:</b> ${p.e}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:18px">
+      <button class="btn" onclick="goPhase(${(n+3)%4})">← Anterior</button>
+      <button class="btn primary" onclick="goPhase(${(n+1)%4})">Siguiente →</button>
+    </div></div>`;
+  $$('.node').forEach(b => b.classList.toggle('on', +b.dataset.phase === n));
+}
+window.goPhase = showPhase;
+$$('.node').forEach(b => b.onclick = () => showPhase(+b.dataset.phase));
+showPhase(0);
+
+/* ===================== PILARES + MODAL ===================== */
+const modal = $('#modal');
+$('#pillars').innerHTML = PILLARS.map((p,i) => `
+  <article class="card pillar reveal" style="--pc:${p.c}" data-i="${i}" tabindex="0" role="button" aria-label="Ver detalle de ${p.t}">
+    <span class="num">0${i+1}</span>
+    <div class="ico">${ICONS[p.i]}</div>
+    <h3>${p.t}</h3><p>${p.s}</p>
+    <div class="more">abrir detalle ↗</div>
+  </article>`).join('');
+$$('.pillar').forEach(el => {
+  watch(el);
+  const open = () => {
+    const p = PILLARS[el.dataset.i];
+    modal.style.setProperty('--pc', p.c);
+    $('#mTag').textContent = 'Pilar 0' + (+el.dataset.i+1);
+    $('#mTag').style.color = p.c;
+    $('#mTitle').textContent = p.t;
+    $('#mBody').innerHTML = p.b;
+    modal.showModal();
+  };
+  el.onclick = open;
+  el.onkeydown = e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); open(); } };
+});
+const closeModal = () => {
+  if (!modal.open || modal.classList.contains('closing')) return;
+  modal.classList.add('closing');
+  modal.addEventListener('animationend', () => { modal.classList.remove('closing'); modal.close(); }, {once:true});
+};
+$('#closeModal').onclick = closeModal;
+modal.onclick = e => { if (e.target === modal) closeModal(); };
+modal.addEventListener('cancel', e => { e.preventDefault(); closeModal(); });
+
+/* ===================== NOC SIMULADO ===================== */
+(() => {
+  const st = {cpu:38,ram:52,net:44,up:99.9,incident:false};
+  const hist = {cpu:[],ram:[],net:[],up:[]};
+  const log = $('#log');
+  const now = () => new Date().toLocaleTimeString('es',{hour12:false});
+  const write = (msg,c='#a1a1a6') => {
+    const d = document.createElement('div'); d.innerHTML = `<span style="color:#6e6e73">[${now()}]</span> <span style="color:${c}">${msg}</span>`;
+    log.prepend(d); while (log.children.length > 7) log.lastChild.remove();
+  };
+  const jitter = (v,a,min,max) => Math.max(min, Math.min(max, v + (Math.random()-.5)*a));
+  const spark = (id, arr, max) => {
+    const pts = arr.map((v,i)=>`${i*(100/19)},${40 - v/max*38}`).join(' ');
+    $(id).innerHTML = `<polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;
+  };
+  const warn = v => v > 85 ? 'var(--c3)' : v > 70 ? 'var(--c5)' : null;
+  function tick(){
+    if (st.incident){ st.cpu = jitter(Math.min(97, st.cpu+8), 4, 0, 99); st.ram = jitter(Math.min(94, st.ram+5), 3, 0, 99); st.up = Math.max(97.2, st.up - .15); }
+    else { st.cpu = jitter(st.cpu, 10, 20, 65); st.ram = jitter(st.ram, 6, 40, 70); st.up = Math.min(99.99, st.up + .03); }
+    st.net = jitter(st.net, 14, 15, 85);
+    [['cpu','Cpu','%',100],['ram','Ram','%',100],['net','Net',' Mb/s',100],['up','Up','%',100]].forEach(([k,K,u,max])=>{
+      const v = st[k]; hist[k].push(v); if (hist[k].length>20) hist[k].shift();
+      $('#v'+K).textContent = (k==='up'? v.toFixed(2) : Math.round(v)) + u;
+      const m = $('#m'+K); m.style.width = (k==='up'? (v-95)*20 : v) + '%';
+      const w = k==='up' ? (v<98.5?'var(--c3)':null) : warn(v);
+      m.style.background = w || m.style.getPropertyValue('--mc');
+      $('#s'+K).style.color = w || getComputedStyle(m).getPropertyValue('--mc');
+      spark('#s'+K, hist[k], max);
+    });
+    if (st.incident && st.cpu > 90 && !st.alerted){ st.alerted = true; write('ALERTA: CPU > 90% en SRV-ERP-01 — umbral crítico superado','#ff375f'); setTimeout(()=>write('Ticket #INC-2041 creado automáticamente · prioridad ALTA','#ffd60a'),900); setTimeout(()=>write('Técnico de guardia notificado · diagnóstico: proceso de respaldo desbocado','#ffd60a'),2000); }
+    if (Math.random() < .12 && !st.incident) write(['Chequeo de salud de servicios: OK','Parche de seguridad aplicado en WS-114','Respaldo incremental completado','Licencias verificadas: 0 vencidas','Latencia VPN sucursal 2: 18 ms'][Math.floor(Math.random()*5)],'#30d158');
+  }
+  $('#incident').onclick = () => { if(st.incident) return; st.incident = true; st.alerted = false; write('Pico anómalo de carga detectado en el clúster de servidores','#ffd60a'); };
+  $('#optimize').onclick = () => {
+    if(!st.incident){ write('Sin incidencias activas · balanceo de carga preventivo ejecutado','#64d2ff'); st.cpu -= 10; return; }
+    st.incident = false; st.cpu = 45; st.ram = 55;
+    write('Proceso reiniciado · carga redistribuida en nodo virtual SRV-ERP-02','#64d2ff');
+    setTimeout(()=>write('INC-2041 resuelto · MTTR: 4 min · causa raíz documentada','#30d158'),700);
+  };
+  write('NOC en línea · monitoreando 42 activos','#64d2ff');
+  for (let i=0;i<20;i++) tick();
+  setInterval(tick, 1200);
+})();
+
+/* ===================== CAPAS DE SEGURIDAD ===================== */
+function showLayer(n){
+  const l = LAYERS[n];
+  $('#layerInfo').innerHTML = `<div class="fade-swap"><span class="tag" style="color:var(--c3)">Capa ${n+1} de 5</span><h3>${l.t}</h3><p style="color:var(--muted);margin:8px 0 14px">${l.d}</p><div class="chips">${l.x.map(x=>`<span class="chip">${x}</span>`).join('')}</div></div>`;
+  $$('.layer').forEach(el => el.classList.toggle('on', +el.dataset.l === n));
+}
+$$('.layer').forEach(el => {
+  const f = e => { e.stopPropagation(); showLayer(+el.dataset.l); };
+  el.addEventListener('mouseenter', f); el.addEventListener('click', f);
+});
+showLayer(4);
+
+/* ===================== OPERADORES DE BÚSQUEDA ===================== */
+$('#ops').innerHTML = OPS.map((o,i)=>`<button data-i="${i}">${o.o}</button>`).join('');
+$$('#ops button').forEach(b => b.onclick = () => {
+  const o = OPS[b.dataset.i];
+  $$('#ops button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+  const q = $('#query'); q.textContent = '';
+  let i = 0; (function t(){ if(i<=o.q.length){ q.textContent = o.q.slice(0,i++); setTimeout(t,22);} })();
+  $('#opExplain').textContent = o.e;
+});
+
+/* ===================== QUIZ ===================== */
+(() => {
+  let n = 0, score = 0; const card = $('#qcard');
+  function render(){
+    if (n >= QUIZ.length){
+      const pct = Math.round(score/QUIZ.length*100);
+      const msg = pct===100 ? '¡Nivel gerente TIC! 🏆' : pct>=67 ? '¡Muy bien! Estás listo para el NOC. 🚀' : 'Repasá las secciones y volvé a intentarlo. 💪';
+      card.innerHTML = `<div class="score fade-swap"><span class="tag">Resultado</span><div class="big grad">${score}/${QUIZ.length}</div><p style="margin:10px 0 22px">${msg}</p><button class="btn primary" id="again">Reintentar</button></div>`;
+      $('#again').onclick = () => { n=0; score=0; render(); };
+      return;
+    }
+    const q = QUIZ[n];
+    card.innerHTML = `<div class="fade-swap"><div class="qprog">${QUIZ.map((_,i)=>`<i class="${i<n?'done':''}"></i>`).join('')}</div>
+      <span class="tag">Pregunta ${n+1} / ${QUIZ.length}</span><h3 style="font-size:1.3rem">${q.q}</h3>
+      ${q.o.map((o,i)=>`<button class="opt" data-i="${i}">${o}</button>`).join('')}
+      <p class="feedback" id="fb"></p></div>`;
+    $$('.opt').forEach(b => b.onclick = () => {
+      const ok = +b.dataset.i === q.a;
+      if (ok) score++;
+      $$('.opt').forEach(x => { x.disabled = true; if(+x.dataset.i===q.a) x.classList.add('right'); });
+      if (!ok) b.classList.add('wrong');
+      $('#fb').textContent = (ok ? '✔ Correcto. ' : '✘ Incorrecto. ') + q.f;
+      setTimeout(()=>{ n++; render(); }, 1900);
+    });
+  }
+  render();
+})();
+</script>
+</body>
+</html>
